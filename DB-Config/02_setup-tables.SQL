@@ -1,0 +1,20 @@
+
+USE management;
+
+CREATE TABLE `Users`(
+  `userid` INTEGER NOT NULL AUTO_INCREMENT PRIMARY KEY,
+  `tilecount` INTEGER DEFAULT '0',
+  `tilemax` INTEGER DEFAULT '50000',
+  `extra` VARCHAR(512) DEFAULT 'NULL'
+) ENGINE=InnoDB DEFAULT CHARSET=utf8;
+
+USE gts;
+
+CREATE TABLE `pkeys`(
+  `id` INTEGER NOT NULL AUTO_INCREMENT PRIMARY KEY, 
+  `userid` INT NOT NULL, 
+  `pkey` VARCHAR(40)  UNIQUE NOT NULL,
+  `tilecount` INTEGER DEFAULT '0',
+  `extra` VARCHAR(512) DEFAULT 'NULL', 
+  FOREIGN KEY (userid) REFERENCES management.Users(userid) 
+) ENGINE=InnoDB DEFAULT CHARSET=utf8;
