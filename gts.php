@@ -6,19 +6,19 @@
 ini_set('display_errors', 'On');
 error_reporting(E_ALL);
 */
-$tile_tree_base = './testing-tiles/';
+
+/*
+ * configuration
+ */
+$config = parse_ini_file("gts_config.ini", true);
+
+$tiles_root = $config['tiles']['root'];
 
 /* ----------------------------------------------------- */
 /*                      SERVER SETUP                     */
 /* ----------------------------------------------------- */
 
-$db_connection = new mysqli(
-    'localhost',// host
-    'gts', 		// user
-    '********',	// password
-    '',			// database
-    '3306'      // port
-);
+$db_connection = new mysqli($config['mysql']['host'], $config['mysql']['user'], $config['mysql']['password'], $config['mysql']['database'], $config['mysql']['port']);
 if ($db_connection->connect_error) {
     error_log('MySql Connection failed: ' . $db_connection->connect_error);
     http_response_code(500);
@@ -42,10 +42,10 @@ if(isset( $_REQUEST['key'])){
  * - User must not have reached the max tile cap
  */
 
-// First condition: wrong key? No user connected to it? -> Error 500
-$result = $db_connection->query("SELECT management.Users.userid, management.Users.tilecount, management.Users.tilemax FROM management.Users INNER JOIN gts.pkeys ON management.Users.userid = gts.pkeys.userid WHERE gts.pkeys.pkey = '" . $key . "';");
+// First condition: wrong key? No user connected to it? -> Error 403
+$result = $db_connection->query("SELECT Users.userid, Users.tilecount, Users.tilemax FROM Users INNER JOIN pkeys ON Users.userid = pkeys.userid WHERE pkeys.pkey = '" . $key . "';");
 if (!$result) {
-    http_response_code(500);
+    http_response_code(403);
     die(1);
 } else {
     $r_userdata = $result->fetch_row();
@@ -56,7 +56,7 @@ if (!$result) {
 }
 
 // second condition: Reached the tile cap? -> Error 403
-if (!$userid || ($curr_tile_count + 1)>=$max_tiles){
+if (!$userid || $curr_tile_count >= $max_tiles){
     http_response_code(403);
     die(1);
 }
@@ -66,7 +66,7 @@ if (!$userid || ($curr_tile_count + 1)>=$max_tiles){
 /* ----------------------------------------------------- */
     
 /* Prepare Response */
-$file = $tile_tree_base . $_REQUEST['z'] . '/' . $_REQUEST['x'] . '/' . $_REQUEST['y'];
+$file = $tiles_root . $_REQUEST['z'] . '/' . $_REQUEST['x'] . '/' . $_REQUEST['y'];
 
 /* Check file existence */
 if(!file_exists($file)){
@@ -76,7 +76,7 @@ if(!file_exists($file)){
 }
 
 /* Update tile counters (per-user, and per-key counters) */
-$db_connection->query("UPDATE management.Users INNER JOIN gts.pkeys ON (management.Users.userid = gts.pkeys.userid) SET management.Users.tilecount = management.Users.tilecount + 1, gts.pkeys.tilecount = gts.pkeys.tilecount + 1 WHERE gts.pkeys.pkey = '" .$key . "';");
+$db_connection->query("UPDATE Users INNER JOIN pkeys ON (Users.userid = pkeys.userid) SET Users.tilecount = Users.tilecount + 1, pkeys.tilecount = pkeys.tilecount + 1 WHERE pkeys.pkey = '" .$key . "';");
 
 /* Actual Response */
 $db_connection->close();

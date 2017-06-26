@@ -1,6 +1,6 @@
 -- Testing Insertions
 
-USE management;
+USE gts;
 
 INSERT INTO `Users`(
  userid,
@@ -9,8 +9,6 @@ INSERT INTO `Users`(
  '1',
  'Used for testing purposes'
 );
-
-USE gts;
 
 INSERT INTO `pkeys` (
  userid,
