@@ -1,34 +1,28 @@
 #!/bin/sh
 
+# This script gives me the possibility to add hooks for 
+# any docker-compose command and process.
+# Not implemented docker-compose commands can be run from docker-compose itself.
+#
+# Added also a useful shorthand for getting any container's prompt.
+
 usage()
 {
     echo "USAGE:"
     echo "build\t(Re)builds the images."
-    echo "start  \tStarts the services."
+    echo "start\tStarts the services."
     echo "stop \tStops the running containers."
+    echo "ps   \tShows running containers."
+    echo "---"
+    echo "sh     <image-name>    \tGet a shell from a container image."
+    echo "hot-sh <container-name>\tGet a shell from a running image."
     echo "---"
     echo "-h --help \tPrints this help guide."
 }
 
 build()
 {
-    cp .htaccess gts.php ./images/php/
-    cp gts_config.ini ./images/php/gts_config.template
-    cp -r testing-tiles/ ./images/php/ 
-
-    cd DB-Config
-    cp 01_setup-databases.SQL ../images/mysql/docker-unified.sql
-    cat 02_setup-tables.SQL >> ../images/mysql/docker-unified.sql
-    cat init.SQL >> ../images/mysql/docker-unified.sql
-    cd ..
-
     docker-compose build
-
-    rm -f ./images/mysql/docker-unified.sql
-    rm -f ./images/php/gts_config.ini
-    rm -f ./images/php/.htaccess
-    rm -f ./images/php/gts.php
-    rm -rf ./images/php/testing-tiles/
 }
 
 start()
@@ -41,6 +35,21 @@ stop()
     docker-compose stop
 }
 
+ps()
+{
+    docker-compose ps
+}
+
+sh()
+{
+    docker run -it $1 /bin/bash
+}
+
+hsh()
+{
+    docker exec -it $1 bash
+}
+
 while [ "$1" != "" ]; do
     case $1 in
         start )                 start
@@ -51,6 +60,15 @@ while [ "$1" != "" ]; do
         build )                 build
                                 exit
                                 ;;
+        ps )                    ps
+                                exit
+                                ;;
+        sh )                    sh $2
+                                exit
+                                ;;
+        hot-sh )                hsh $2
+                                exit
+                                ;;
         -h | --help )           usage
                                 exit
                                 ;;
@@ -59,3 +77,4 @@ while [ "$1" != "" ]; do
     esac
     shift
 done
+usage
