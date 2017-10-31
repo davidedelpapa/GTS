@@ -33,7 +33,7 @@
 	            ' Sentinel data 2016 by ' +
 	            '<a href="https://www.sentinelmap.eu">SentinelMap</a>' ;
 
-    var mUrl =  'http://localhost/{z}/{x}/{y}.jpg?key={key}';
+    var mUrl =  'http://localhost:8000/{z}/{x}/{y}.jpg?key={key}';
     var pkey = 'TEST';
     var mapView = L.tileLayer(mUrl, {attribution: mAttr, key: pkey});
 

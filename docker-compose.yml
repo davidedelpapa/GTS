@@ -1,0 +1,21 @@
+version: '3'
+
+services:
+  php:
+    build: ./images/php
+    volumes: 
+      - ./:/var/www/html
+    ports: 
+      - '8000:80'
+    links:
+      - db
+  db:
+    image: mysql:8.0
+    restart: always
+    volumes:
+      - ./db:/var/lib/mysql
+    ports: 
+      - '3306:3306'
+    environment:
+      MYSQL_DATABASE: gts
+      MYSQL_ROOT_PASSWORD: test
