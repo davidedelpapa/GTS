@@ -99,7 +99,82 @@ hsh()
 
 mysql()
 {
-    exec mysql -h$MYSQL_HOST --port $MYSQL_PORT -D$MYSQL_DATABASE -u$MYSQL_USER -p$MYSQL_PASSWD
+    exec mysql --defaults-extra-file=<(printf "[client]\nuser = %s\npassword = %s" "$MYSQL_USER" "$MYSQL_PASSWD") -h$MYSQL_HOST --port $MYSQL_PORT -D$MYSQL_DATABASE
+}
+
+adduserp()
+{
+    A_USER=$1
+    A_PKEY=$2
+    exec mysql --defaults-extra-file=<(printf "[client]\nuser = %s\npassword = %s" "$MYSQL_USER" "$MYSQL_PASSWD") -h$MYSQL_HOST --port $MYSQL_PORT -D$MYSQL_DATABASE -e "$(printf "insert into Users(username) values('%s'); insert into pkeys(pkey, userid) values('%s', (select Users.userid from Users where username = '%s')); select Users.userid as user, username, pkey as pkeys from Users join pkeys on Users.userid = pkeys.userid where username = '%s';" "$A_USER" "$A_PKEY" "$A_USER" "$A_USER")"
+}
+
+adduser()
+{
+    A_USER=$1
+    exec mysql --defaults-extra-file=<(printf "[client]\nuser = %s\npassword = %s" "$MYSQL_USER" "$MYSQL_PASSWD") -h$MYSQL_HOST --port $MYSQL_PORT -D$MYSQL_DATABASE -e "$(printf "insert into Users(username) values('%s'); select userid as user, username  from Users where username = '%s';" "$A_USER" "$A_USER")"
+}
+
+deluser()
+{
+    D_USER=$1
+    exec mysql --defaults-extra-file=<(printf "[client]\nuser = %s\npassword = %s" "$MYSQL_USER" "$MYSQL_PASSWD") -h$MYSQL_HOST --port $MYSQL_PORT -D$MYSQL_DATABASE -e "$(printf "select Users.userid as user, username from Users where username = '%s'; delete from pkeys where pkeys.userid = (select Users.userid from Users where username = '%s'); delete from Users where username = '%s';" "$D_USER" "$D_USER" "$D_USER")"
+}
+
+deluserid()
+{
+    D_USERID=$1
+    exec mysql --defaults-extra-file=<(printf "[client]\nuser = %s\npassword = %s" "$MYSQL_USER" "$MYSQL_PASSWD") -h$MYSQL_HOST --port $MYSQL_PORT -D$MYSQL_DATABASE -e "$(printf "select username, pkey as 'pkeys connected' from Users join pkeys on Users.userid = pkeys.userid where Users.userid = '%s'; select Users.userid as user, username, count(pkey) as pkeys from Users join pkeys on Users.userid = pkeys.userid where Users.userid = '%s'; delete from pkeys where pkeys.userid = '%s'; delete from Users where userid = '%s'; select concat ('Updated ', row_count(), ' rows') as 'Success!'; " "$D_USERID" "$D_USERID" "$D_USERID")"
+}
+
+addpkey()
+{
+    A_USER=$1
+    A_PKEY=$2
+    exec mysql --defaults-extra-file=<(printf "[client]\nuser = %s\npassword = %s" "$MYSQL_USER" "$MYSQL_PASSWD") -h$MYSQL_HOST --port $MYSQL_PORT -D$MYSQL_DATABASE -e "$(printf "insert into pkeys(pkey, userid) values('%s', (select Users.userid from Users where username = '%s')); select Users.userid as user, username, pkey as pkeys from Users join pkeys on Users.userid = pkeys.userid where username = '%s';" "$A_PKEY" "$A_USER" "$A_USER")"
+}
+
+addpkeyuserid()
+{
+    A_USERID=$1
+    A_PKEY=$2
+    exec mysql --defaults-extra-file=<(printf "[client]\nuser = %s\npassword = %s" "$MYSQL_USER" "$MYSQL_PASSWD") -h$MYSQL_HOST --port $MYSQL_PORT -D$MYSQL_DATABASE -e "$(printf "insert into pkeys(pkey, userid) values('%s', (select Users.userid from Users where Users.userid = '%s')); select Users.userid as user, username, pkey as pkeys from Users join pkeys on Users.userid = pkeys.userid where Users.userid = '%s';" "$A_PKEY" "$A_USERID" "$A_USERID")"
+}
+
+delpkey()
+{
+    D_PKEY=$1
+    exec mysql --defaults-extra-file=<(printf "[client]\nuser = %s\npassword = %s" "$MYSQL_USER" "$MYSQL_PASSWD") -h$MYSQL_HOST --port $MYSQL_PORT -D$MYSQL_DATABASE -e "$(printf "delete from pkeys where pkey = '%s';" "$D_PKEY")"
+}
+
+showuserid()
+{
+    S_USERID=$1
+    exec mysql --defaults-extra-file=<(printf "[client]\nuser = %s\npassword = %s" "$MYSQL_USER" "$MYSQL_PASSWD") -h$MYSQL_HOST --port $MYSQL_PORT -D$MYSQL_DATABASE -e "$(printf "select Users.userid as user, username, pkey as pkeys from Users join pkeys on Users.userid = pkeys.userid where Users.userid = '%s';" "$S_USERID")"
+}
+
+showuser()
+{
+    S_USER=$1
+    exec mysql --defaults-extra-file=<(printf "[client]\nuser = %s\npassword = %s" "$MYSQL_USER" "$MYSQL_PASSWD") -h$MYSQL_HOST --port $MYSQL_PORT -D$MYSQL_DATABASE -e "$(printf "select Users.userid as user, username, pkey as pkeys from Users join pkeys on Users.userid = pkeys.userid where username = '%s';" "$S_USER")"
+}
+
+showpkey()
+{
+    S_PKEY=$1
+    exec mysql --defaults-extra-file=<(printf "[client]\nuser = %s\npassword = %s" "$MYSQL_USER" "$MYSQL_PASSWD") -h$MYSQL_HOST --port $MYSQL_PORT -D$MYSQL_DATABASE -e "$(printf "select Users.userid as user, username, pkey as pkey from Users join pkeys on Users.userid = pkeys.userid where pkeys.pkey = '%s';" "$S_PKEY")"
+}
+
+test_install()
+{
+    cd DB-Config
+    cat 01_setup-databases.SQL 02_setup-tables.SQL init.SQL > merged.sql
+    exec mysql --defaults-extra-file=<(printf "[client]\nuser = %s\npassword = %s" "root" "test") -h$MYSQL_HOST --port $MYSQL_PORT -e "source merged.sql"
+}
+
+test_uninstall()
+{
+    exec mysql --defaults-extra-file=<(printf "[client]\nuser = %s\npassword = %s" "root" "test") -h$MYSQL_HOST --port $MYSQL_PORT -e "source DB-Config/uninstall.SQL"
 }
 
 while [ "$1" != "" ]; do
@@ -125,6 +200,42 @@ while [ "$1" != "" ]; do
                                 exit
                                 ;;
         mysql )                 mysql
+                                exit
+                                ;;
+        aup | adduserp )        adduserp $2 $3
+                                exit
+                                ;;
+        au | adduser )          adduser $2
+                                exit
+                                ;;
+        addpkey )               addpkey $2 $3
+                                exit
+                                ;;                
+        deluser )               deluser $2
+                                exit
+                                ;;
+        du )                    deluserid $2
+                                exit
+                                ;;
+        dk | delpkey )          delpkey $2
+                                exit
+                                ;;
+        showuser )              showuser $2
+                                exit
+                                ;;
+        shu )                   showuserid $2
+                                exit
+                                ;;
+        ak )                    addpkeyuserid $2 $3
+                                exit
+                                ;;
+        shk | showpkey )        showpkey $2
+                                exit
+                                ;;
+        test-install )          test_install
+                                exit
+                                ;;
+        test-uninstall )        test_uninstall
                                 exit
                                 ;;
         -h | --help )           usage

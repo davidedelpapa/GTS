@@ -1,0 +1,61 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <title>Quick Test GTS with OpenLayers</title>
+
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <link rel="stylesheet" href="https://openlayers.org/en/v4.6.4/css/ol.css" type="text/css">
+    <script src="https://cdn.polyfill.io/v2/polyfill.min.js?features=requestAnimationFrame,Element.prototype.classList,URL"></script>
+    <script src="https://openlayers.org/en/v4.6.4/build/ol.js"></script>
+
+    <style>
+        #map {
+            width: 600px;
+            height: 350px;
+        }
+    </style>
+</head>
+
+<body>
+    <header>
+        <center>
+            <h1>Venice!</h1>
+        </center>
+    </header>
+
+    <center>
+        <div id="map" class="map"></div>
+    </center>
+    <script>
+        var mAttr = 'Modified <a href="https://scihub.copernicus.eu/">Copernicus</a>' +
+            ' Sentinel data 2016 by ' +
+            '<a href="https://www.sentinelmap.eu">SentinelMap</a>';
+        var mUrl = 'http://localhost:8000/{z}/{x}/{y}.jpg?key=';
+        var pkey = 'TEST'; //This can come from other sources, like props, etc...
+        var map = new ol.Map({
+            target: 'map',
+            layers: [
+                new ol.layer.Tile({
+                    source: new ol.source.XYZ({
+                        attributions: mAttr,
+                        url: mUrl + pkey
+                    })
+                })
+            ],
+            view: new ol.View({
+                center: ol.proj.fromLonLat([12.3450, 45.4350]),
+                zoom: 13
+            })
+        });
+    </script>
+    <footer>
+        <center>
+            <h3>...with OpenLayers it works too!</h3>
+        </center>
+    </footer>
+</body>
+
+</html>

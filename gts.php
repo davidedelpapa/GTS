@@ -81,6 +81,6 @@ $db_connection->query("UPDATE Users INNER JOIN pkeys ON (Users.userid = pkeys.us
 /* Actual Response */
 $db_connection->close();
 
-header('Content-Type: image/jpeg');        
+header('Content-Type: ' . $config['tiles']['mime']);        
 readfile($file);
 ?>

@@ -1,6 +1,7 @@
+FLUSH PRIVILEGES;
 -- Create MySql User
--- TODO: substitute ***** with yur password
-CREATE USER 'gts'@'localhost' IDENTIFIED BY '*****';
+-- TODO: substitute 'test' with your password
+CREATE USER 'gts'@'localhost' IDENTIFIED BY 'test';
 
 -- Create database
 CREATE DATABASE gts;
